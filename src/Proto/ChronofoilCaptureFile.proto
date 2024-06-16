@@ -1,0 +1,54 @@
+﻿syntax = "proto2";
+
+option csharp_namespace = "Chronofoil.CaptureFile.Generated";
+
+import "google/protobuf/timestamp.proto";
+
+message VersionInfo
+{
+  optional int32 captureVersion = 1;        // The overall capture file version
+  optional int64 dx9Revision = 2;           // The revision of the DirectX 9 binary
+  optional int64 dx11Revision = 3;          // The revision of the DirectX 11 binary
+  optional bytes dx9Hash = 4;               // The hash of the DirectX 9 binary
+  optional bytes dx11Hash = 5;              // The hash of the DirectX 11 binary
+  repeated string gameVer = 6;              // The current game versions, indexed by ex ID
+  optional string writerIdentifier = 7;     // The identifier of the capture source
+  optional string writerVersion = 8;        // The version of the capture source
+}
+
+message CaptureInfo
+{
+  optional string captureId = 1;                              // The ID of this capture; GUID, as a string
+  optional google.protobuf.Timestamp captureStartTime = 2;    // The start time of this capture
+  optional google.protobuf.Timestamp captureEndTime = 3;      // The end time of this capture
+  optional bool isCensored = 4;                               // Whether this capture has been censored
+  optional bool isDirty = 5;                                  // Whether this capture was finalized from an unpacked writer
+}
+
+enum Direction
+{
+  DIRECTION_NONE = 0;     // Required
+  DIRECTION_RX = 1;       // Receiving (Clientbound)
+  DIRECTION_TX = 2;       // Transmitting (Serverbound)
+}
+
+enum Protocol
+{
+  PROTOCOL_NONE = 0;      // Required
+  PROTOCOL_ZONE = 1;      // The zone protocol
+  PROTOCOL_CHAT = 2;      // The chat protocol
+  PROTOCOL_LOBBY = 3;     // The lobby protocol
+  // TODO: http
+}
+
+message CaptureFrameHeader
+{
+  optional Protocol protocol = 1;     // The protocol of this frame
+  optional Direction direction = 2;   // The direction of this frame
+}
+
+message CaptureFrame
+{
+  optional CaptureFrameHeader header = 1;   // The frame header
+  optional bytes frame = 2;                 // The frame itself
+}
