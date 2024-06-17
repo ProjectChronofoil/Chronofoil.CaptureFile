@@ -1,5 +1,6 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using Chronofoil.Capture.IO;
 using Chronofoil.CaptureFile.Binary;
 using Chronofoil.CaptureFile.Binary.Packet;
@@ -13,6 +14,7 @@ public class CaptureRedactor
 {
     private readonly string _path;
     private Dictionary<Protocol, Dictionary<Direction, HashSet<int>>> _targets;
+    private byte[] _ipAddress;
     private SimpleBuffer _buffer;
 
     public CaptureRedactor(string path, List<CensorTarget> targets)
@@ -124,9 +126,23 @@ public class CaptureRedactor
             
             // This span contains all packet data, excluding the element header, including the IPC header
             var pktData = data.Slice(offset + pktHdrSize, (int)pktHdr.Size - pktHdrSize);
+            
+            // Custom handling for Lobby type 10, which contains the user's IP address in uninitialized memory
+            // The memory helps understand which fields are used, which is why this packet isn't completely nulled
+            if (frame.Header.Protocol == Protocol.Lobby && pktHdr.Type == PacketType.Unknown_A)
+            {
+                InitIp(pktData);
+                var ranges = GetIpRanges(pktData);
+                var currentOffset = 0;
 
-            // We don't censor non-IPC packets
-            if (pktHdr.Type != PacketType.Ipc)
+                foreach (var range in ranges)
+                {
+                    _buffer.Write(pktData.Slice(currentOffset, range.pos - currentOffset));
+                    _buffer.WriteNull(range.len);
+                    currentOffset = range.pos + range.len;
+                }
+                _buffer.Write(pktData[currentOffset..]);
+            } else if (pktHdr.Type != PacketType.Ipc)
             {
                 _buffer.Write(pktData);
             }
@@ -167,11 +183,6 @@ public class CaptureRedactor
                         startPos = ipcHdrSize + 18;     // Session ID starts 18 bytes in
                         endPos = ipcHdrSize + 18 + 64;  // 64 bytes long    
                     }
-                    // else if (ipcHdr.Type == 15)
-                    // {
-                    //     startPos = ipcHdrSize + 28;     // Thingy starts 28 bytes in
-                    //     endPos = ipcHdrSize + 28 + 32;  // 32 bytes long (I think, that's all that's filled in
-                    // }
                     
                     _buffer.Write(pktData[..startPos]);
                     _buffer.WriteNull(endPos - startPos);
@@ -187,5 +198,31 @@ public class CaptureRedactor
         }
 
         return _buffer.GetBuffer();
+    }
+
+    private void InitIp(ReadOnlySpan<byte> packetData)
+    {
+        var data = new byte[packetData.Length];
+        packetData.CopyTo(data);
+        for (int i = 0; i < data.Length; i++)
+            if (data[i] == 0)
+                data[i] = 32;
+        var asString = Encoding.ASCII.GetString(data);
+        var regex = new Regex(@"\[(\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}):\d*?\]");
+        var match = regex.Match(asString);
+        if (!match.Success) throw new Exception("Failed to find IP to censor in Lobby Type 10!");
+        var ip = match.Groups[1].Value;
+        _ipAddress = Encoding.ASCII.GetBytes(ip);
+    }
+    
+    private List<(int pos, int len)> GetIpRanges(ReadOnlySpan<byte> pktData)
+    {
+        var ret = new List<(int pos, int len)>();
+        for (int i = 0; i < pktData.Length - _ipAddress.Length; i++)
+        {
+            if (pktData.Slice(i, _ipAddress.Length).SequenceEqual(_ipAddress))
+                ret.Add((i, _ipAddress.Length));
+        }
+        return ret;
     }
 }
