@@ -139,7 +139,7 @@ public class CaptureRedactor
                 
                 // Console.WriteLine($"Read {frame.Header.Protocol} {frame.Header.Direction} opcode {ipcHdr.Type}");
 
-                var isCensorableLobby = frame.Header.Protocol == Protocol.Lobby && ipcHdr is { Type: 5 or 15 };
+                var isCensorableLobby = frame.Header.Protocol == Protocol.Lobby && ipcHdr is { Type: 5 };
                 
                 // We censor all chat IPC
                 var isCensorableChat = frame.Header.Protocol == Protocol.Chat;
@@ -167,11 +167,11 @@ public class CaptureRedactor
                         startPos = ipcHdrSize + 18;     // Session ID starts 18 bytes in
                         endPos = ipcHdrSize + 18 + 64;  // 64 bytes long    
                     }
-                    else if (ipcHdr.Type == 15)
-                    {
-                        startPos = ipcHdrSize + 28;     // Thingy starts 28 bytes in
-                        endPos = ipcHdrSize + 28 + 32;  // 32 bytes long (I think, that's all that's filled in
-                    }
+                    // else if (ipcHdr.Type == 15)
+                    // {
+                    //     startPos = ipcHdrSize + 28;     // Thingy starts 28 bytes in
+                    //     endPos = ipcHdrSize + 28 + 32;  // 32 bytes long (I think, that's all that's filled in
+                    // }
                     
                     _buffer.Write(pktData[..startPos]);
                     _buffer.WriteNull(endPos - startPos);
