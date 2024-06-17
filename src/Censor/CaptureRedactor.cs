@@ -56,9 +56,7 @@ public class CaptureRedactor
         {
             var censoredFrameData = CensorFrame(frame);
             if (censoredFrameData.Length != frame.Frame.Length)
-                Debugger.Break();
-            // if (i == 358)
-                // Debugger.Break();
+                throw new Exception("Censor failed; censored frame was shorter than provided frame.");
             frame.Frame = ByteString.CopyFrom(censoredFrameData);
             writer.AppendCaptureFrame(frame.Header.Protocol, frame.Header.Direction, frame.Frame.Span);
             i++;
@@ -141,7 +139,7 @@ public class CaptureRedactor
                 
                 // Console.WriteLine($"Read {frame.Header.Protocol} {frame.Header.Direction} opcode {ipcHdr.Type}");
 
-                var isCensorableLobby = frame.Header.Protocol == Protocol.Lobby && ipcHdr.Type == 5;
+                var isCensorableLobby = frame.Header.Protocol == Protocol.Lobby && ipcHdr is { Type: 5 or 15 };
                 
                 // We censor all chat IPC
                 var isCensorableChat = frame.Header.Protocol == Protocol.Chat;
@@ -162,10 +160,19 @@ public class CaptureRedactor
                 }
                 else if (isCensorableLobby)
                 {
-                    var startPos = ipcHdrSize + 18;     // Session ID starts 18 bytes in
-                    var endPos = ipcHdrSize + 18 + 64;  // 64 bytes long
+                    var startPos = 0;
+                    var endPos = 0;
+                    if (ipcHdr.Type == 5)
+                    {
+                        startPos = ipcHdrSize + 18;     // Session ID starts 18 bytes in
+                        endPos = ipcHdrSize + 18 + 64;  // 64 bytes long    
+                    }
+                    else if (ipcHdr.Type == 15)
+                    {
+                        startPos = ipcHdrSize + 28;     // Thingy starts 28 bytes in
+                        endPos = ipcHdrSize + 28 + 32;  // 32 bytes long (I think, that's all that's filled in
+                    }
                     
-                    // Shame this must be hardcoded, but I like the version info in packet type 5
                     _buffer.Write(pktData[..startPos]);
                     _buffer.WriteNull(endPos - startPos);
                     _buffer.Write(pktData[endPos..]);
