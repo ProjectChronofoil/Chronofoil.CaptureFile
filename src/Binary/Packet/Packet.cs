@@ -4,6 +4,8 @@ public class Packet {
     public PacketElementHeader Header;
     public PacketIpcHeader? IpcHeader;
     public byte[] Data;
+    
+    public Packet() {}
 
     public Packet(BinaryReader br) {
         Header = new PacketElementHeader(br);

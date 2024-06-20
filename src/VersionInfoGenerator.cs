@@ -11,12 +11,12 @@ public static class VersionInfoGenerator
 	/// <summary>
 	/// Generates a VersionInfo provided a game path.
 	/// </summary>
-	/// <param name="gamePath"></param>
+	/// <param name="gameExePath"></param>
 	/// <returns></returns>
-	public static VersionInfo Generate(string gamePath, string writerId, string writerVersion)
+	public static VersionInfo Generate(string gameExePath, string writerId, string writerVersion)
 	{
 		var ret = new VersionInfo();
-		var path = Process.GetCurrentProcess().MainModule.FileName;
+		var path = gameExePath;
 		var dx11Path = path.Replace("ffxiv.exe", "ffxiv_dx11.exe");
 		var dx9Path = path.Replace("ffxiv_dx11.exe", "ffxiv.exe");
 
