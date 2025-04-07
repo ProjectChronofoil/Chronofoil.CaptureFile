@@ -12,6 +12,13 @@ public class SimpleBuffer
 		_buffer = new byte[size];
 		_offset = 0;
 	}
+	
+	public int Size => _offset;
+
+	public Span<byte> Get(int offset, int length)
+	{
+		return _buffer.AsSpan()[offset..(offset + length)];
+	}
 
 	public void Write(ReadOnlySpan<byte> src)
 	{
