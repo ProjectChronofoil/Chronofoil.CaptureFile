@@ -8,12 +8,12 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="Google.Protobuf" Version="3.30.2" />
-        <PackageReference Include="Grpc.Tools" Version="2.71.0">
+        <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+        <PackageReference Include="Grpc.Tools" Version="2.72.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="ZstdSharp.Port" Version="0.8.5" />
+        <PackageReference Include="ZstdSharp.Port" Version="0.8.6" />
     </ItemGroup>
 
     <ItemGroup>
