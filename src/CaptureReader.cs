@@ -1,12 +1,11 @@
 ﻿using System.IO.Compression;
 using Chronofoil.CaptureFile.Generated;
 using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using ZstdSharp;
 
 namespace Chronofoil.CaptureFile;
 
-public class CaptureReader
+public class CaptureReader : IDisposable
 {
     public VersionInfo VersionInfo { get; private set; }
     public CaptureInfo CaptureInfo { get; private set; }
@@ -132,5 +131,10 @@ public class CaptureReader
                 break;
             yield return frame;
         }
+    }
+
+    public void Dispose()
+    {
+        _archive.Dispose();
     }
 }
