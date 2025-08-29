@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Chronofoil.Capture.IO;
+﻿namespace Chronofoil.Capture.IO;
 
 public class SimpleBuffer
 {

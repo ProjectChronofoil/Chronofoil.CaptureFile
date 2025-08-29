@@ -1,6 +1,4 @@
-﻿using System.Buffers.Binary;
-
-namespace Chronofoil.CaptureFile.Binary.Packet;
+﻿namespace Chronofoil.CaptureFile.Binary.Packet;
 
 public struct FrameHeader
 {
